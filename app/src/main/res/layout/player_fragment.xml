@@ -25,6 +25,8 @@
                 android:id="@+id/player"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
+                app:show_timeout="-1"
+                app:controller_layout_id="@layout/playback_control"
                 app:layout_constraintDimensionRatio="h,16:9"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
