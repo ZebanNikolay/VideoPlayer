@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">VideoPlayer</string>
+    <string name="url">URL</string>
+    <string name="download">Download</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="error">Произошла ошибка!</string>
 </resources>
