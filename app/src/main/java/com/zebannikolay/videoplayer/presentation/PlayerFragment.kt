@@ -8,18 +8,17 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
+import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.upstream.DefaultLoadErrorHandlingPolicy
 import com.google.android.exoplayer2.util.Util
 import com.google.android.material.snackbar.Snackbar
 import com.zebannikolay.videoplayer.R
 import com.zebannikolay.videoplayer.databinding.PlayerFragmentBinding
-import java.io.IOException
 
 
 private const val APP_NAME = "VideoPlayer"
@@ -31,23 +30,13 @@ class PlayerFragment : Fragment() {
     }
 
     private val eventListener: Player.EventListener = object : Player.EventListener {
+
         override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
             viewModel.playWhenReady.value = playWhenReady
         }
-    }
 
-    private val errorHandlingPolicy = object : DefaultLoadErrorHandlingPolicy() {
-        override fun getRetryDelayMsFor(
-            dataType: Int,
-            loadDurationMs: Long,
-            exception: IOException?,
-            errorCount: Int
-        ): Long {
-            // todo
-            if (errorCount == 1) {
-                onError(exception)
-            }
-            return super.getRetryDelayMsFor(dataType, loadDurationMs, exception, errorCount)
+        override fun onPlayerError(error: ExoPlaybackException) {
+            onError(error)
         }
     }
 
@@ -119,7 +108,6 @@ class PlayerFragment : Fragment() {
             Util.getUserAgent(requireContext(), APP_NAME)
         )
         return ProgressiveMediaSource.Factory(dataSourceFactory)
-            .setLoadErrorHandlingPolicy(errorHandlingPolicy)
             .createMediaSource(uri)
     }
 
