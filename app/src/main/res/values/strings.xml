@@ -5,4 +5,8 @@
     <string name="play">Play</string>
     <string name="pause">Pause</string>
     <string name="error">Произошла ошибка!</string>
+    <string name="cancel_download">Cancel</string>
+    <string name="notification_title">Downloading…</string>
+    <string name="channel_name">Download</string>
+    <string name="progress_label">Downloading progress...</string>
 </resources>

@@ -58,10 +58,10 @@ class PlayerFragment : Fragment() {
         super.onActivityCreated(savedInstanceState)
         viewModel = ViewModelProvider(this).get(PlayerViewModel::class.java)
         binding.vm = viewModel
-        observeViewModel()
+        observeData()
     }
 
-    private fun observeViewModel() {
+    private fun observeData() {
         viewModel.playWhenReady.observe(viewLifecycleOwner, Observer { playWhenReady ->
             if (player?.playWhenReady == playWhenReady) return@Observer
             player?.playWhenReady = playWhenReady

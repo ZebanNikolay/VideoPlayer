@@ -8,6 +8,7 @@
         <variable
             name="vm"
             type="com.zebannikolay.videoplayer.presentation.PlayerViewModel" />
+        <import type="android.view.View"/>
     </data>
 
     <ScrollView
@@ -25,12 +26,12 @@
                 android:id="@+id/player"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                app:show_timeout="-1"
                 app:controller_layout_id="@layout/playback_control"
                 app:layout_constraintDimensionRatio="h,16:9"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="parent"
+                app:show_timeout="-1" />
 
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/text_input_layout"
@@ -71,11 +72,44 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="16dp"
+                android:enabled="@{!vm.isDownloading}"
+                android:onClick="@{() -> vm.onDownloadClicked()}"
                 android:text="@string/download"
                 app:layout_constraintBottom_toBottomOf="@+id/play_pause_button"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/play_pause_button"
                 app:layout_constraintTop_toTopOf="@+id/play_pause_button" />
+
+            <androidx.constraintlayout.widget.Group
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="@{vm.isDownloading ? View.VISIBLE : View.GONE}"
+                app:constraint_referenced_ids="progress_label,progress_bar" />
+
+            <TextView
+                android:id="@+id/progress_label"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:text="@string/progress_label"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/download_button" />
+
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:progress="@{vm.progress}"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/progress_label" />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </ScrollView>
 </layout>
