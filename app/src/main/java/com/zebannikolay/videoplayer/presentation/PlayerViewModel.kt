@@ -6,6 +6,8 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.work.*
 import com.zebannikolay.videoplayer.data.DownloadWorker
+import java.io.IOException
+import java.lang.Exception
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -17,6 +19,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
 
     val progress: MutableLiveData<Int> = MutableLiveData(0)
     val isDownloading: MutableLiveData<Boolean> = MutableLiveData(false)
+    val errorEvent: MutableLiveData<Exception> = MutableLiveData()
 
     private val workManager by lazy(LazyThreadSafetyMode.NONE) {
         WorkManager.getInstance(getApplication())
@@ -48,6 +51,10 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 if (workInfo.state.isFinished) {
                     isDownloading.value = false
                     workLiveData.removeObserver(this)
+                }
+                if (workInfo.state == WorkInfo.State.FAILED) {
+                    val errorMessage = workInfo.outputData.getString(DownloadWorker.KEY_ERROR_MESSAGE)
+                    errorEvent.value = IOException(errorMessage)
                 }
             }
         })

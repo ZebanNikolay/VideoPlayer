@@ -70,6 +70,9 @@ class PlayerFragment : Fragment() {
             // todo
             updateMediaSource(it)
         })
+        viewModel.errorEvent.observe(viewLifecycleOwner, Observer {
+            onError(it)
+        })
     }
 
     private fun updateMediaSource(uriPath: String?) {
