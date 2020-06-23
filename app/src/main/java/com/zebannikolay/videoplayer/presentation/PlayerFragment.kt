@@ -73,6 +73,10 @@ class PlayerFragment : Fragment() {
         viewModel.errorEvent.observe(viewLifecycleOwner, Observer {
             onError(it)
         })
+        viewModel.messageEvent.observe(viewLifecycleOwner, Observer {
+            if (it.isNullOrBlank()) return@Observer
+            showMessage(it)
+        })
     }
 
     private fun updateMediaSource(uriPath: String?) {
@@ -126,9 +130,13 @@ class PlayerFragment : Fragment() {
 
     private fun onError(throwable: Throwable?) {
         viewModel.playWhenReady.postValue(false)
+        showMessage(throwable?.message ?: getString(R.string.error))
+    }
+
+    private fun showMessage(message: String) {
         Snackbar.make(
             binding.root,
-            throwable?.message ?: getString(R.string.error),
+            message,
             Snackbar.LENGTH_LONG
         ).show()
     }

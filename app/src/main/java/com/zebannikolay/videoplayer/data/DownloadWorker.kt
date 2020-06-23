@@ -29,7 +29,7 @@ class DownloadWorker(context: Context, parameters: WorkerParameters) :
         val outputFile = inputData.getString(KEY_OUTPUT_FILE_NAME) ?: return Result.failure()
         setProgress(workDataOf(KEY_PROGRESS to 0))
         setForeground(createForegroundInfo(0))
-        val file = File(applicationContext.filesDir, "test.mp4")
+        val file = File(applicationContext.filesDir, outputFile)
         try {
             download(inputUrl, file)
         } catch (e: Exception) {
@@ -46,8 +46,8 @@ class DownloadWorker(context: Context, parameters: WorkerParameters) :
             .build()
         val response = client.newCall(request).execute()
         if (!response.isSuccessful) throw IOException("Unexpected code $response")
-        val inputStream = response.body?.byteStream() ?: return
-        saveStreamToFile(inputStream, outputFile, response.body!!.contentLength())
+        val inputStream = response.body?.byteStream()
+        saveStreamToFile(inputStream!!, outputFile, response.body!!.contentLength())
     }
 
     private suspend fun saveStreamToFile(fileInputStream: InputStream, file: File, contentLength: Long) {
