@@ -23,6 +23,12 @@ class DownloadWorker(context: Context, parameters: WorkerParameters) :
         context.getSystemService(Context.NOTIFICATION_SERVICE) as
                 NotificationManager
 
+    init {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            createChannel()
+        }
+    }
+
     override suspend fun doWork(): Result {
         val inputUrl = inputData.getString(KEY_INPUT_URL) ?: return Result.failure()
         val outputFile = inputData.getString(KEY_OUTPUT_FILE_NAME) ?: return Result.failure()
@@ -81,11 +87,8 @@ class DownloadWorker(context: Context, parameters: WorkerParameters) :
         val cancelIntent = WorkManager.getInstance(applicationContext)
             .createCancelPendingIntent(id)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            createChannel()
-        }
-
         val notification = NotificationCompat.Builder(applicationContext, DOWNLOAD_CHANNEL_ID)
+            .setOnlyAlertOnce(true)
             .setContentTitle(title)
             .setTicker(title)
             .setSmallIcon(android.R.drawable.stat_sys_download)
