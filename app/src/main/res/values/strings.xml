@@ -12,4 +12,5 @@
     <string name="preference_file_key">DOWNLOADED_FILES</string>
     <string name="file_already_downloaded">File already downloaded</string>
     <string name="file_downloaded">File downloaded</string>
+    <string name="video_url" translatable="false">http://storage.googleapis.com/exoplayer-test-media-0/BigBuckBunny_320x180.mp4</string>
 </resources>

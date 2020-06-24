@@ -3,23 +3,28 @@ package com.zebannikolay.videoplayer.presentation
 import android.app.Application
 import android.content.Context
 import android.net.Uri
+import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
 import androidx.work.*
 import com.zebannikolay.videoplayer.R
 import com.zebannikolay.videoplayer.data.DownloadWorker
+import java.io.File
 import java.io.IOException
 import java.lang.Exception
 import java.util.*
 
 class PlayerViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val sharedPref = application.getSharedPreferences(
-        application.getString(R.string.preference_file_key), Context.MODE_PRIVATE)
+    private val context = application.applicationContext
 
-    val uriPath: MutableLiveData<String> =
-        MutableLiveData("https://storage.googleapis.com/exoplayer-test-media-0/BigBuckBunny_320x180.mp4")
+    private val sharedPref = context.getSharedPreferences(
+        context.getString(R.string.preference_file_key), Context.MODE_PRIVATE
+    )
+
+    val url: MutableLiveData<String> =
+        MutableLiveData(context.getString(R.string.video_url))
 
     val playWhenReady: MutableLiveData<Boolean> = MutableLiveData(false)
     val currentPosition: MutableLiveData<Long> = MutableLiveData(0)
@@ -31,19 +36,26 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     val messageEvent: MutableLiveData<String> = MutableLiveData()
 
     private val workManager by lazy(LazyThreadSafetyMode.NONE) {
-        WorkManager.getInstance(getApplication())
+        WorkManager.getInstance(context)
+    }
+
+    init {
+        url.observeForever{
+            playWhenReady.value = false
+        }
     }
 
     fun onDownloadClicked() {
-        if (isFileDownloaded()) {
-            messageEvent.value = getApplication<Application>().getString(R.string.file_already_downloaded)
+        if (isFileDownloaded(url.value)) {
+            messageEvent.value =
+                context.getString(R.string.file_already_downloaded)
             return
         }
         downloadFile()
     }
 
-    private fun isFileDownloaded(): Boolean {
-        return sharedPref.getString(uriPath.value, null) != null
+    private fun isFileDownloaded(url: String?): Boolean {
+        return sharedPref.getString(url, null) != null
     }
 
     private fun downloadFile() {
@@ -53,7 +65,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
         val request: WorkRequest = OneTimeWorkRequestBuilder<DownloadWorker>()
             .setInputData(
                 workDataOf(
-                    DownloadWorker.KEY_INPUT_URL to uriPath.value,
+                    DownloadWorker.KEY_INPUT_URL to url.value,
                     DownloadWorker.KEY_OUTPUT_FILE_NAME to fileName
                 )
             )
@@ -63,7 +75,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     private fun createFileName(): String {
-        val uri = Uri.parse(uriPath.value)
+        val uri = Uri.parse(url.value)
         return UUID.randomUUID().toString() + "_" + uri.lastPathSegment
     }
 
@@ -77,12 +89,14 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 progress.value = value
                 if (workInfo.state == WorkInfo.State.SUCCEEDED) {
                     sharedPref.edit()
-                        .putString(uriPath.value, fileName)
+                        .putString(url.value, fileName)
                         .apply()
-                    messageEvent.value = getApplication<Application>().getString(R.string.file_downloaded)
+                    messageEvent.value =
+                        getApplication<Application>().getString(R.string.file_downloaded)
                 }
                 if (workInfo.state == WorkInfo.State.FAILED) {
-                    val errorMessage = workInfo.outputData.getString(DownloadWorker.KEY_ERROR_MESSAGE)
+                    val errorMessage =
+                        workInfo.outputData.getString(DownloadWorker.KEY_ERROR_MESSAGE)
                     errorEvent.value = IOException(errorMessage)
                 }
                 if (workInfo.state.isFinished) {
@@ -91,5 +105,21 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
                 }
             }
         })
+    }
+
+    fun getMediaSourceUri(): Uri? {
+        val uri: Uri
+        val savedFileName = sharedPref.getString(url.value, null)
+        try {
+            uri = if (savedFileName == null) {
+                Uri.parse(url.value)
+            } else {
+                File(context.filesDir, savedFileName).toUri()
+            }
+        } catch (e: Exception) {
+            errorEvent.value = e
+            return null
+        }
+        return uri
     }
 }

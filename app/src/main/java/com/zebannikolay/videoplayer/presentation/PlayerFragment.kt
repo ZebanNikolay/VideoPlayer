@@ -30,11 +30,6 @@ class PlayerFragment : Fragment() {
     }
 
     private val eventListener: Player.EventListener = object : Player.EventListener {
-
-        override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-            viewModel.playWhenReady.value = playWhenReady
-        }
-
         override fun onPlayerError(error: ExoPlaybackException) {
             onError(error)
         }
@@ -44,6 +39,7 @@ class PlayerFragment : Fragment() {
     private lateinit var binding: PlayerFragmentBinding
 
     private var player: SimpleExoPlayer? = null
+    private lateinit var currentMediaSource: MediaSource
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -63,12 +59,11 @@ class PlayerFragment : Fragment() {
 
     private fun observeData() {
         viewModel.playWhenReady.observe(viewLifecycleOwner, Observer { playWhenReady ->
-            if (player?.playWhenReady == playWhenReady) return@Observer
+            val uri: Uri = viewModel.getMediaSourceUri() ?: return@Observer
+            if (playWhenReady == true && !isSameSource(uri)) {
+                updateMediaSource(uri)
+            }
             player?.playWhenReady = playWhenReady
-        })
-        viewModel.uriPath.observe(viewLifecycleOwner, Observer {
-            // todo
-            updateMediaSource(it)
         })
         viewModel.errorEvent.observe(viewLifecycleOwner, Observer {
             onError(it)
@@ -79,42 +74,31 @@ class PlayerFragment : Fragment() {
         })
     }
 
-    private fun updateMediaSource(uriPath: String?) {
-        val mediaSource = getMediaSource(uriPath) ?: return
-        player?.prepare(mediaSource)
+    private fun isSameSource(uri: Uri): Boolean {
+        return currentMediaSource.tag == uri.toString()
     }
 
-    override fun onStart() {
-        super.onStart()
-        initPlayer()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        releasePlayer()
+    private fun updateMediaSource(uri: Uri) {
+        currentMediaSource = createMediaSource(uri)
+        player?.prepare(currentMediaSource)
     }
 
     private fun initPlayer() {
         player = SimpleExoPlayer.Builder(requireContext()).build()
         binding.player.player = player
         player?.addListener(eventListener)
-        val mediaSource = getMediaSource(viewModel.uriPath.value) ?: return
+        currentMediaSource = createMediaSource(viewModel.getMediaSourceUri() ?: return)
         player?.seekTo(viewModel.currentPosition.value ?: 0)
-        player?.prepare(mediaSource, false, false)
+        player?.prepare(currentMediaSource, false, false)
     }
 
-    private fun getMediaSource(uriPath: String?): MediaSource? {
-        val uri = try {
-            Uri.parse(uriPath)
-        } catch (e: Exception) {
-            onError(e)
-            return null
-        }
+    private fun createMediaSource(uri: Uri): MediaSource {
         val dataSourceFactory: DataSource.Factory = DefaultDataSourceFactory(
             requireContext(),
             Util.getUserAgent(requireContext(), APP_NAME)
         )
         return ProgressiveMediaSource.Factory(dataSourceFactory)
+            .setTag(uri.toString())
             .createMediaSource(uri)
     }
 
@@ -139,5 +123,15 @@ class PlayerFragment : Fragment() {
             message,
             Snackbar.LENGTH_LONG
         ).show()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        initPlayer()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        releasePlayer()
     }
 }
