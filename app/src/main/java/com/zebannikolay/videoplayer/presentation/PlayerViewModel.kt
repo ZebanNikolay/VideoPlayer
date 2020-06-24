@@ -3,7 +3,6 @@ package com.zebannikolay.videoplayer.presentation
 import android.app.Application
 import android.content.Context
 import android.net.Uri
-import androidx.core.net.toUri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.Observer
@@ -114,7 +113,7 @@ class PlayerViewModel(application: Application) : AndroidViewModel(application) 
             uri = if (savedFileName == null) {
                 Uri.parse(url.value)
             } else {
-                File(context.filesDir, savedFileName).toUri()
+                Uri.fromFile(File(context.filesDir, savedFileName))
             }
         } catch (e: Exception) {
             errorEvent.value = e
