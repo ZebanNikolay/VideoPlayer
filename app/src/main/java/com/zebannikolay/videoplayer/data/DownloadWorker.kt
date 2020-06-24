@@ -16,7 +16,6 @@ import java.io.IOException
 import java.io.InputStream
 import java.lang.Exception
 
-
 class DownloadWorker(context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
 
@@ -27,8 +26,7 @@ class DownloadWorker(context: Context, parameters: WorkerParameters) :
     override suspend fun doWork(): Result {
         val inputUrl = inputData.getString(KEY_INPUT_URL) ?: return Result.failure()
         val outputFile = inputData.getString(KEY_OUTPUT_FILE_NAME) ?: return Result.failure()
-        setProgress(workDataOf(KEY_PROGRESS to 0))
-        setForeground(createForegroundInfo(0))
+        updateProgress(0)
         val file = File(applicationContext.filesDir, outputFile)
         try {
             download(inputUrl, file)
@@ -62,14 +60,19 @@ class DownloadWorker(context: Context, parameters: WorkerParameters) :
                 downloaded += read
 
                 val newPercent = (downloaded / (contentLength / 100)).toInt()
-                if (downloadedPercent < newPercent) {
+                val isNeedUpdateProgress = downloadedPercent < newPercent
+                if (isNeedUpdateProgress) {
                     downloadedPercent = newPercent
-                    setProgress(workDataOf(KEY_PROGRESS to downloadedPercent))
-                    setForeground(createForegroundInfo(downloadedPercent))
+                    updateProgress(downloadedPercent)
                 }
             }
             flush()
         }
+    }
+
+    private suspend fun updateProgress(progress: Int) {
+        setProgress(workDataOf(KEY_PROGRESS to progress))
+        setForeground(createForegroundInfo(progress))
     }
 
     private fun createForegroundInfo(progress: Int): ForegroundInfo {

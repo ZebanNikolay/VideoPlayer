@@ -20,7 +20,6 @@ import com.google.android.material.snackbar.Snackbar
 import com.zebannikolay.videoplayer.R
 import com.zebannikolay.videoplayer.databinding.PlayerFragmentBinding
 
-
 private const val APP_NAME = "VideoPlayer"
 
 class PlayerFragment : Fragment() {
